@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SEAGULL STUDIO — PS4 [5.05] 7.00 - 14.02 FW Host By ThetHtooAung</title>
+  <!-- Tailwind CSS for responsive layout utilities -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts for modern geometric tech typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Exo+2:wght@600;700;800;900&family=Orbitron:wght@700;800;900&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* Reset and base dark PlayStation blue theme */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      width: 100%;
+      background-color: #020814;
+      color: #f8fafc;
+      font-family: 'Exo 2', 'Rajdhani', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      overflow-x: hidden;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(10px, 2.5vw, 24px);
+      background:
+        radial-gradient(circle at 18% 22%, rgba(0, 112, 204, 0.22), transparent 45%),
+        radial-gradient(circle at 82% 78%, rgba(46, 154, 255, 0.16), transparent 50%),
+        #020814;
+    }
+
+    /* 16:9 widescreen PS4 host stage */
+    .ps4-stage {
+      position: relative;
+      width: 100%;
+      max-width: 1120px;
+      aspect-ratio: 16 / 9;
+      min-height: 440px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1.5px solid rgba(46, 154, 255, 0.52);
+      background-color: #030c1e;
+      box-shadow:
+        0 24px 70px rgba(0, 55, 145, 0.45),
+        0 0 36px rgba(46, 154, 255, 0.2),
+        inset 0 0 28px rgba(0, 112, 204, 0.18);
+    }
+
+    /* Responsive background canvas filling the stage */
+    #bgCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      z-index: 0;
+    }
+
+    /* Subtle readability vignette over custom/canvas backgrounds */
+    .stage-vignette {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background: linear-gradient(
+        to bottom,
+        rgba(2, 8, 20, 0.28) 0%,
+        rgba(2, 8, 20, 0.08) 45%,
+        rgba(2, 8, 20, 0.56) 100%
+      );
+    }
+
+    /* Foreground UI overlay */
+    .stage-overlay {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+      padding: clamp(14px, 2.2vw, 24px);
+    }
+
+    /* Top bar */
+    .top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px 14px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      background: rgba(3, 12, 30, 0.72);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(46, 154, 255, 0.34);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.38);
+      user-select: none;
+    }
+
+    .top-title {
+      font-size: clamp(0.8rem, 1.35vw, 0.98rem);
+      font-weight: 700;
+      color: #e0f2fe;
+      line-height: 1.35;
+    }
+
+    .brand-title-font {
+      font-family: 'Audiowide', 'Orbitron', 'Exo 2', sans-serif;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      color: #ffffff;
+    }
+
+    .studio-red {
+      color: #ff4d5a;
+      text-shadow: 0 0 12px rgba(255, 77, 90, 0.55);
+    }
+
+    .author-font {
+      font-family: 'Rajdhani', 'Exo 2', sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: #bae6fd;
+    }
+
+    /* Hidden utility controls by default; toggle with 'H' or double-clicking top bar */
+    .top-controls {
+      display: none;
+    }
+
+    .top-controls.is-visible {
+      display: flex;
+    }
+
+    .action-btn {
+      background: rgba(0, 112, 204, 0.28);
+      color: #f0f9ff;
+      border: 1px solid rgba(46, 154, 255, 0.5);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-family: 'Exo 2', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      line-height: 1.2;
+      cursor: pointer;
+      transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+    }
+
+    .action-btn:hover {
+      background: rgba(0, 112, 204, 0.56);
+      border-color: #2e9aff;
+    }
+
+    .action-btn:active {
+      transform: scale(0.98);
+    }
+
+    .action-btn:focus-visible {
+      outline: 2px solid #2e9aff;
+      outline-offset: 2px;
+    }
+
+    /* Lower-centered translucent status card */
+    .center-status {
+      margin-top: auto;
+      margin-bottom: 8px;
+      align-self: center;
+      max-width: 92%;
+      text-align: center;
+      padding: 12px 22px;
+      border-radius: 12px;
+      background: rgba(3, 12, 30, 0.72);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(46, 154, 255, 0.34);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+    }
+
+    .loading-text {
+      font-family: 'Exo 2', 'Rajdhani', sans-serif;
+      font-size: clamp(0.92rem, 1.75vw, 1.25rem);
+      font-weight: 700;
+      letter-spacing: 0.015em;
+      color: #ffffff;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
+    }
+
+    .sub-status {
+      margin-top: 4px;
+      font-family: 'Rajdhani', 'Exo 2', sans-serif;
+      font-size: clamp(0.75rem, 1.15vw, 0.86rem);
+      font-weight: 600;
+      color: #93c5fd;
+    }
+
+    /* Bottom credits footer */
+    .credits-bar {
+      text-align: center;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-family: 'Rajdhani', 'Exo 2', sans-serif;
+      font-size: clamp(0.76rem, 1.25vw, 0.92rem);
+      font-weight: 700;
+      line-height: 1.4;
+      color: #e2e8f0;
+      background: rgba(2, 9, 23, 0.78);
+      backdrop-filter: blur(7px);
+      -webkit-backdrop-filter: blur(7px);
+      border: 1px solid rgba(46, 154, 255, 0.3);
+    }
+
+    @media (max-width: 640px) {
+      .ps4-stage {
+        aspect-ratio: auto;
+        min-height: 440px;
+        border-radius: 14px;
+      }
+
+      .stage-overlay {
+        padding: 12px;
+      }
+
+      .action-btn {
+        flex: 1 1 auto;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section id="ps4Stage" class="ps4-stage" aria-label="SEAGULL STUDIO — PS4 [5.05] 7.00 - 14.02 FW Host By ThetHtooAung">
+    <!-- Responsive HTML5 Canvas Background Renderer -->
+    <canvas id="bgCanvas"></canvas>
+    <div class="stage-vignette" aria-hidden="true"></div>
+
+    <div class="stage-overlay">
+      <!-- Top Header Bar -->
+      <header id="topBar" class="top-bar" title="Double-click or press 'H' to toggle controls">
+        <div class="top-title">
+          <span class="brand-title-font">SEAGULL <span class="studio-red">STUDIO</span></span>
+          — PS4 [5.05] 7.00 - 14.02 FW Host
+          <span class="author-font">By ThetHtooAung</span>
+        </div>
+
+        <!-- Hidden by default; toggle with 'H' or double-clicking the top bar -->
+        <div id="topControls" class="top-controls flex-wrap items-center gap-2 w-full sm:w-auto">
+          <button type="button" id="uploadBgBtn" class="action-btn">Choose BG Image</button>
+          <button type="button" id="resetBgBtn" class="action-btn">Reset BG</button>
+          <button type="button" id="replayBtn" class="action-btn">Replay Status</button>
+          <button type="button" id="fullscreenBtn" class="action-btn">Full Screen</button>
+          <input type="file" id="bgFileInput" accept="image/*" hidden />
+        </div>
+      </header>
+
+      <!-- Lower-Centered Translucent Status Card -->
+      <main class="center-status">
+        <div id="loadingText" class="loading-text" aria-live="polite">
+          Detecting Device &amp; Environment... Please Wait
+        </div>
+        <div id="subStatus" class="sub-status">
+          Automatic client check in progress • Press 'H' or double-click header for display options
+        </div>
+      </main>
+
+      <!-- Bottom Credits Footer -->
+      <footer class="credits-bar">
+        Special Thanks to:
+        <span style="color: #2e9aff;">@_AlAzif</span>
+        ChendoChap
+        <span style="color: #f472b6;">@Kameleonre_</span>
+        SiSTRo Abc • Theme by <strong>ThetHtooAung</strong>
+      </footer>
+    </div>
+  </section>
+
+  <script>
+    // =========================================================================
+    // 1. DOM REFERENCES & CONFIGURATION
+    // =========================================================================
+    const ps4Stage = document.getElementById('ps4Stage');
+    const bgCanvas = document.getElementById('bgCanvas');
+    const ctx = bgCanvas ? bgCanvas.getContext('2d') : null;
+    const topBar = document.getElementById('topBar');
+    const topControls = document.getElementById('topControls');
+    const loadingText = document.getElementById('loadingText');
+    const subStatus = document.getElementById('subStatus');
+    const uploadBgBtn = document.getElementById('uploadBgBtn');
+    const resetBgBtn = document.getElementById('resetBgBtn');
+    const replayBtn = document.getElementById('replayBtn');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const bgFileInput = document.getElementById('bgFileInput');
+
+    const STORAGE_BG_KEY = 'seagull_host_bg_data';
+    const STATUS_PREFIX = 'Detecting Device & Environment';
+    const STATUS_SUFFIX = 'Please Wait';
+
+    let dotsCount = 3;
+    let statusTimer = null;
+    let customBgImage = null; // HTMLImageElement when custom or local background.jpg is active
+    let usingCustomImage = false;
+    let isBusy = false;
+    let isPs4Device = false;
+    let detectedPlatformLabel = 'Unknown Device';
+    const loadedScripts = new Map();
+    const payloadRegistry = new Map();
+
+    // =========================================================================
+    // 2. CANVAS BACKGROUND RENDERING (DARK PLAYSTATION BLUE + TECH BRANDING)
+    // =========================================================================
+    function syncCanvasSize() {
+      if (!bgCanvas || !ps4Stage || !ctx) return;
+      const rect = ps4Stage.getBoundingClientRect();
+      const width = Math.max(320, Math.round(rect.width));
+      const height = Math.max(240, Math.round(rect.height));
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+      if (bgCanvas.width !== Math.round(width * dpr) || bgCanvas.height !== Math.round(height * dpr)) {
+        bgCanvas.width = Math.round(width * dpr);
+        bgCanvas.height = Math.round(height * dpr);
+      }
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      renderStageCanvas(width, height);
+    }
+
+    function drawCoverImage(img, width, height) {
+      if (!ctx || !img || !img.naturalWidth || !img.naturalHeight) return false;
+      const imgRatio = img.naturalWidth / img.naturalHeight;
+      const stageRatio = width / height;
+
+      let drawW = width;
+      let drawH = height;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      if (imgRatio > stageRatio) {
+        drawW = height * imgRatio;
+        offsetX = (width - drawW) * 0.5;
+      } else {
+        drawH = width / imgRatio;
+        offsetY = (height - drawH) * 0.5;
+      }
+
+      ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+      return true;
+    }
+
+    function drawPlayStationShapes(w, h) {
+      if (!ctx) return;
+      const s = Math.min(w, h) / 720;
+      ctx.save();
+      ctx.strokeStyle = 'rgba(46, 154, 255, 0.44)';
+      ctx.lineWidth = Math.max(1.4, 2.2 * s);
+
+      // Triangle top-left
+      ctx.beginPath();
+      ctx.moveTo(w * 0.13, h * 0.34);
+      ctx.lineTo(w * 0.145, h * 0.385);
+      ctx.lineTo(w * 0.115, h * 0.385);
+      ctx.closePath();
+      ctx.stroke();
+
+      // Triangle top-right
+      ctx.beginPath();
+      ctx.moveTo(w * 0.83, h * 0.29);
+      ctx.lineTo(w * 0.844, h * 0.33);
+      ctx.lineTo(w * 0.816, h * 0.33);
+      ctx.closePath();
+      ctx.stroke();
+
+      // Circle bottom-right
+      ctx.beginPath();
+      ctx.arc(w * 0.79, h * 0.72, 11 * s, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Cross top-left
+      const cx = w * 0.26;
+      const cy = h * 0.28;
+      const cr = 8 * s;
+      ctx.beginPath();
+      ctx.moveTo(cx - cr, cy - cr);
+      ctx.lineTo(cx + cr, cy + cr);
+      ctx.moveTo(cx + cr, cy - cr);
+      ctx.lineTo(cx - cr, cy + cr);
+      ctx.stroke();
+
+      // Square right
+      ctx.save();
+      ctx.translate(w * 0.89, h * 0.64);
+      ctx.rotate(0.45);
+      const sq = 16 * s;
+      ctx.strokeRect(-sq * 0.5, -sq * 0.5, sq, sq);
+      ctx.restore();
+
+      ctx.restore();
+    }
+
+    function drawConsoleAndController(w, h) {
+      if (!ctx) return;
+      const scale = Math.min(w / 1120, h / 630);
+      const centerX = w * 0.5;
+      const centerY = h * 0.56;
+
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.scale(scale, scale);
+
+      // Glowing orbital ring around console
+      ctx.save();
+      ctx.strokeStyle = 'rgba(46, 154, 255, 0.45)';
+      ctx.lineWidth = 2.4;
+      ctx.shadowColor = '#2e9aff';
+      ctx.shadowBlur = 16;
+      ctx.beginPath();
+      ctx.ellipse(0, 26, 310, 78, -0.04, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+
+      // PS4 slanted chassis top
+      const topGrad = ctx.createLinearGradient(-170, -90, 160, 45);
+      topGrad.addColorStop(0, '#1e3a5f');
+      topGrad.addColorStop(0.55, '#0b1933');
+      topGrad.addColorStop(1, '#050d1d');
+
+      ctx.fillStyle = topGrad;
+      ctx.strokeStyle = 'rgba(46, 154, 255, 0.65)';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.moveTo(-165, -36);
+      ctx.lineTo(25, -104);
+      ctx.lineTo(165, -38);
+      ctx.lineTo(-25, 36);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // PS4 left front bevel
+      ctx.fillStyle = '#050d1c';
+      ctx.beginPath();
+      ctx.moveTo(-165, -36);
+      ctx.lineTo(-25, 36);
+      ctx.lineTo(-25, 74);
+      ctx.lineTo(-165, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // PS4 right side bevel
+      ctx.fillStyle = '#09162e';
+      ctx.beginPath();
+      ctx.moveTo(-25, 36);
+      ctx.lineTo(165, -38);
+      ctx.lineTo(165, 0);
+      ctx.lineTo(-25, 74);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Signature glowing blue PS4 light bar
+      ctx.save();
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 3.2;
+      ctx.shadowColor = '#2e9aff';
+      ctx.shadowBlur = 14;
+      ctx.beginPath();
+      ctx.moveTo(-95, -70);
+      ctx.lineTo(72, -2);
+      ctx.stroke();
+      ctx.restore();
+
+      // DualShock 4 controller silhouette on lower right
+      ctx.save();
+      ctx.translate(82, 8);
+      ctx.fillStyle = '#09152b';
+      ctx.strokeStyle = 'rgba(46, 154, 255, 0.72)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(24, 14);
+      ctx.quadraticCurveTo(68, 4, 112, 14);
+      ctx.lineTo(132, 66);
+      ctx.quadraticCurveTo(136, 92, 112, 84);
+      ctx.lineTo(90, 64);
+      ctx.lineTo(46, 64);
+      ctx.lineTo(24, 84);
+      ctx.quadraticCurveTo(0, 92, 4, 66);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Controller touchpad & blue lightbar
+      ctx.fillStyle = '#122647';
+      ctx.fillRect(46, 12, 44, 22);
+      ctx.strokeRect(46, 12, 44, 22);
+
+      ctx.save();
+      ctx.strokeStyle = '#2e9aff';
+      ctx.lineWidth = 2.6;
+      ctx.shadowColor = '#2e9aff';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.moveTo(48, 11);
+      ctx.lineTo(88, 11);
+      ctx.stroke();
+      ctx.restore();
+
+      // Analog sticks
+      ctx.fillStyle = '#050c1a';
+      ctx.beginPath();
+      ctx.arc(46, 48, 9, 0, Math.PI * 2);
+      ctx.arc(90, 48, 9, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.restore();
+      ctx.restore();
+    }
+
+    function drawHeroBrandingOnCanvas(w, h) {
+      if (!ctx) return;
+      const scale = Math.min(w / 1120, h / 630);
+      const centerX = w * 0.5;
+      const topY = Math.max(92 * scale, h * 0.22);
+
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // "SEAGULL STUDIO" with glowing red "STUDIO"
+      const titleSize = Math.max(22, Math.round(44 * scale));
+      ctx.font = `800 ${titleSize}px 'Audiowide', 'Orbitron', 'Exo 2', sans-serif`;
+
+      const part1 = 'SEAGULL ';
+      const part2 = 'STUDIO';
+      const w1 = ctx.measureText(part1).width;
+      const w2 = ctx.measureText(part2).width;
+      const totalW = w1 + w2;
+      const startX = centerX - totalW * 0.5;
+
+      ctx.save();
+      ctx.textAlign = 'left';
+      ctx.shadowColor = 'rgba(0, 112, 204, 0.65)';
+      ctx.shadowBlur = 14;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(part1, startX, topY);
+
+      ctx.shadowColor = 'rgba(255, 77, 90, 0.8)';
+      ctx.shadowBlur = 18;
+      ctx.fillStyle = '#ff4d5a';
+      ctx.fillText(part2, startX + w1, topY);
+      ctx.restore();
+
+      // "By ThetHtooAung" subtitle
+      const subSize = Math.max(14, Math.round(22 * scale));
+      ctx.font = `700 ${subSize}px 'Rajdhani', 'Exo 2', sans-serif`;
+      ctx.fillStyle = '#bae6fd';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.75)';
+      ctx.shadowBlur = 8;
+      ctx.fillText('By ThetHtooAung', centerX, topY + titleSize * 0.92);
+
+      ctx.restore();
+    }
+
+    function renderStageCanvas(width, height) {
+      if (!ctx) return;
+
+      // Clear canvas
+      ctx.clearRect(0, 0, width, height);
+
+      // If a custom uploaded image or local background.jpg is loaded, draw it cleanly
+      if (usingCustomImage && customBgImage) {
+        drawCoverImage(customBgImage, width, height);
+        return;
+      }
+
+      // Base dark PlayStation blue radial gradient
+      const bgGrad = ctx.createRadialGradient(
+        width * 0.5,
+        height * 0.52,
+        Math.min(width, height) * 0.05,
+        width * 0.5,
+        height * 0.52,
+        Math.max(width, height) * 0.72
+      );
+      bgGrad.addColorStop(0, '#0070cc');
+      bgGrad.addColorStop(0.32, '#003791');
+      bgGrad.addColorStop(0.72, '#04122b');
+      bgGrad.addColorStop(1, '#020816');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, width, height);
+
+      // Glowing PlayStation blue energy waves
+      ctx.save();
+      ctx.strokeStyle = 'rgba(46, 154, 255, 0.65)';
+      ctx.shadowColor = '#2e9aff';
+      ctx.shadowBlur = 16;
+      ctx.lineWidth = Math.max(2, Math.min(width, height) * 0.0055);
+
+      ctx.beginPath();
+      ctx.moveTo(-20, height * 0.62);
+      ctx.bezierCurveTo(
+        width * 0.24,
+        height * 0.34,
+        width * 0.46,
+        height * 0.76,
+        width * 0.68,
+        height * 0.48
+      );
+      ctx.bezierCurveTo(
+        width * 0.84,
+        height * 0.28,
+        width * 0.95,
+        height * 0.58,
+        width + 20,
+        height * 0.42
+      );
+      ctx.stroke();
+
+      ctx.strokeStyle = 'rgba(125, 211, 252, 0.45)';
+      ctx.lineWidth = Math.max(1.5, Math.min(width, height) * 0.0035);
+      ctx.beginPath();
+      ctx.moveTo(-20, height * 0.52);
+      ctx.bezierCurveTo(
+        width * 0.28,
+        height * 0.75,
+        width * 0.52,
+        height * 0.32,
+        width * 0.76,
+        height * 0.58
+      );
+      ctx.bezierCurveTo(
+        width * 0.9,
+        height * 0.72,
+        width * 0.96,
+        height * 0.38,
+        width + 20,
+        height * 0.54
+      );
+      ctx.stroke();
+      ctx.restore();
+
+      drawPlayStationShapes(width, height);
+      drawConsoleAndController(width, height);
+      drawHeroBrandingOnCanvas(width, height);
+    }
+
+    // =========================================================================
+    // 3. BACKGROUND PERSISTENCE & FALLBACK HELPERS
+    // =========================================================================
+    function applyImageSource(src, statusNote = '') {
+      if (!src) return;
+      const img = new Image();
+      img.onload = () => {
+        customBgImage = img;
+        usingCustomImage = true;
+        syncCanvasSize();
+        if (statusNote && subStatus) {
+          subStatus.textContent = statusNote;
+        }
+      };
+      img.onerror = () => {
+        usingCustomImage = false;
+        customBgImage = null;
+        syncCanvasSize();
+      };
+      img.src = src;
+    }
+
+    function resetBackground() {
+      try {
+        localStorage.removeItem(STORAGE_BG_KEY);
+      } catch (err) {
+        // Ignore storage access errors in restricted frames
+      }
+      usingCustomImage = false;
+      customBgImage = null;
+      syncCanvasSize();
+      if (subStatus) {
+        subStatus.textContent = 'Background reset to SEAGULL STUDIO default canvas.';
+      }
+    }
+
+    function restoreSavedBackground() {
+      try {
+        const saved = localStorage.getItem(STORAGE_BG_KEY);
+        if (saved && saved.startsWith('data:image/')) {
+          applyImageSource(saved, 'Restored saved custom background from local storage.');
+          return true;
+        }
+      } catch (err) {
+        // Ignore storage access errors in restricted frames
+      }
+      return false;
+    }
+
+    function loadCanvasFallbackOrLocalBg() {
+      usingCustomImage = false;
+      customBgImage = null;
+      syncCanvasSize();
+
+      const localImg = new Image();
+      localImg.onload = () => {
+        customBgImage = localImg;
+        usingCustomImage = true;
+        syncCanvasSize();
+      };
+      localImg.onerror = () => {
+        usingCustomImage = false;
+        customBgImage = null;
+        syncCanvasSize();
+      };
+      localImg.src = 'background.jpg';
+    }
+
+    // =========================================================================
+    // 4. AUTO DEVICE DETECTION & SAFE PAYLOAD SCRIPT INTEGRATION HOOKS
+    // =========================================================================
+    function detectPs4Client() {
+      const ua = (navigator && navigator.userAgent) || '';
+      const platform = (navigator && navigator.platform) || '';
+      const combined = `${ua} ${platform}`;
+
+      const ps4Match = /PlayStation\s*4|\bPS4\b/i.test(combined);
+      const ps5Match = /PlayStation\s*5|\bPS5\b/i.test(combined);
+
+      if (ps4Match && !ps5Match) {
+        const fwMatch = ua.match(/PlayStation\s*4\/\s*([0-9.]+)/i);
+        return {
+          isPs4: true,
+          platformLabel: fwMatch ? `PlayStation 4 (FW ${fwMatch[1]})` : 'PlayStation 4',
+          userAgent: ua
+        };
+      }
+
+      if (ps5Match) {
+        return {
+          isPs4: false,
+          platformLabel: 'PlayStation 5 (Not PS4)',
+          userAgent: ua
+        };
+      }
+
+      if (/Android/i.test(ua)) {
+        return { isPs4: false, platformLabel: 'Android Device (Not PS4)', userAgent: ua };
+      }
+      if (/iPhone|iPad|iPod/i.test(ua)) {
+        return { isPs4: false, platformLabel: 'iOS Device (Not PS4)', userAgent: ua };
+      }
+      if (/Windows/i.test(ua)) {
+        return { isPs4: false, platformLabel: 'Windows PC / Browser (Not PS4)', userAgent: ua };
+      }
+      if (/Macintosh|Mac OS X/i.test(ua)) {
+        return { isPs4: false, platformLabel: 'macOS Browser (Not PS4)', userAgent: ua };
+      }
+      if (/Linux/i.test(ua)) {
+        return { isPs4: false, platformLabel: 'Linux System (Not PS4)', userAgent: ua };
+      }
+
+      return {
+        isPs4: false,
+        platformLabel: 'Non-PS4 Client',
+        userAgent: ua
+      };
+    }
+
+    function startStatusAnimation(prefix = STATUS_PREFIX, suffix = STATUS_SUFFIX) {
+      try {
+        if (statusTimer !== null) {
+          clearInterval(statusTimer);
+          statusTimer = null;
+        }
+        dotsCount = 3;
+        loadingText.textContent = `${prefix}... ${suffix}`;
+
+        statusTimer = setInterval(() => {
+          dotsCount = (dotsCount % 3) + 1;
+          loadingText.textContent = `${prefix}${'.'.repeat(dotsCount)} ${suffix}`;
+        }, 500);
+      } catch (err) {
+        subStatus.textContent = 'Status indicator ready.';
+      }
+    }
+
+    function stopStatusDots() {
+      if (statusTimer !== null) {
+        clearInterval(statusTimer);
+        statusTimer = null;
+      }
+    }
+
+    function resolveUrlWithFw(url, fw) {
+      if (typeof url !== 'string') return '';
+      return url.replace(/\{fw\}/gi, encodeURIComponent(fw || ''));
+    }
+
+    const SeagullHostAPI = {
+      getDeviceInfo() {
+        return {
+          isPs4: isPs4Device,
+          platformLabel: detectedPlatformLabel
+        };
+      },
+
+      getStatus() {
+        return {
+          main: loadingText ? loadingText.textContent : '',
+          detail: subStatus ? subStatus.textContent : '',
+          isPs4: isPs4Device,
+          platformLabel: detectedPlatformLabel,
+          busy: isBusy,
+          registeredPayloads: Array.from(payloadRegistry.keys()),
+          loadedScripts: Array.from(loadedScripts.keys())
+        };
+      },
+
+      setStatus(mainMessage, detailMessage, options = {}) {
+        if (options.stopAnimation) {
+          stopStatusDots();
+        }
+        if (typeof mainMessage === 'string' && mainMessage.length > 0 && loadingText) {
+          loadingText.textContent = mainMessage;
+        }
+        if (typeof detailMessage === 'string' && detailMessage.length > 0 && subStatus) {
+          subStatus.textContent = detailMessage;
+        }
+      },
+
+      async loadScript(url, options = {}) {
+        const fw = options.firmware || '';
+        const resolvedUrl = resolveUrlWithFw(url, fw);
+        if (!resolvedUrl) {
+          throw new Error('Script URL is required.');
+        }
+
+        if (!options.force && loadedScripts.has(resolvedUrl)) {
+          return loadedScripts.get(resolvedUrl);
+        }
+
+        return new Promise((resolve, reject) => {
+          try {
+            const script = document.createElement('script');
+            script.src = resolvedUrl;
+            script.async = options.async !== false;
+            if (options.type) script.type = options.type;
+
+            script.onload = () => {
+              const record = { url: resolvedUrl, loadedAt: Date.now() };
+              loadedScripts.set(resolvedUrl, record);
+              resolve(record);
+            };
+
+            script.onerror = () => {
+              reject(new Error(`Unable to load script: ${resolvedUrl}`));
+            };
+
+            document.body.appendChild(script);
+          } catch (err) {
+            reject(err);
+          }
+        });
+      },
+
+      async fetchPayloadBuffer(url, options = {}) {
+        const fw = options.firmware || '';
+        const resolvedUrl = resolveUrlWithFw(url, fw);
+        if (!resolvedUrl) {
+          throw new Error('Payload binary URL is required.');
+        }
+
+        const response = await fetch(resolvedUrl, {
+          cache: options.cache || 'no-store'
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status} fetching ${resolvedUrl}`);
+        }
+
+        const buffer = await response.arrayBuffer();
+        return {
+          url: resolvedUrl,
+          byteLength: buffer.byteLength,
+          buffer
+        };
+      },
+
+      registerPayload(name, handlerOrConfig) {
+        if (typeof name !== 'string' || !name.trim()) {
+          throw new Error('Payload name must be a non-empty string.');
+        }
+        const key = name.trim().toLowerCase();
+        if (typeof handlerOrConfig === 'function') {
+          payloadRegistry.set(key, { name: key, run: handlerOrConfig });
+        } else if (handlerOrConfig && typeof handlerOrConfig === 'object') {
+          payloadRegistry.set(key, {
+            name: key,
+            label: handlerOrConfig.label || name,
+            requirePs4: handlerOrConfig.requirePs4 !== false,
+            scriptUrl: handlerOrConfig.scriptUrl || '',
+            payloadUrl: handlerOrConfig.payloadUrl || '',
+            globalFn: handlerOrConfig.globalFn || '',
+            run: typeof handlerOrConfig.run === 'function' ? handlerOrConfig.run : null
+          });
+        } else {
+          throw new Error('Invalid payload definition.');
+        }
+        return true;
+      },
+
+      async runPayload(name, context = {}) {
+        const key = String(name || '').trim().toLowerCase();
+        const entry = payloadRegistry.get(key);
+        const info = detectPs4Client();
+        isPs4Device = info.isPs4;
+        detectedPlatformLabel = info.platformLabel;
+
+        if (!isPs4Device && (!entry || entry.requirePs4 !== false)) {
+          this.setStatus(
+            `PS4 မဟုတ်ပါ • Detected: ${detectedPlatformLabel}`,
+            'Not a PlayStation 4 console — automatic PS4 host routine stopped safely',
+            { stopAnimation: true }
+          );
+          return {
+            ok: false,
+            reason: 'not_ps4',
+            payload: key,
+            platform: detectedPlatformLabel
+          };
+        }
+
+        isBusy = true;
+        try {
+          this.setStatus(
+            `Running Auto ${key.toUpperCase()} Routine...`,
+            `Detected ${detectedPlatformLabel}`,
+            { stopAnimation: true }
+          );
+
+          if (!entry) {
+            this.setStatus(
+              `No module registered for "${key}"`,
+              `Detected ${detectedPlatformLabel} • Ready for SeagullHostAPI.registerPayload()`,
+              { stopAnimation: true }
+            );
+            return { ok: false, reason: 'unregistered', payload: key, platform: detectedPlatformLabel };
+          }
+
+          if (entry.scriptUrl) {
+            await this.loadScript(entry.scriptUrl, context);
+          }
+
+          let payloadData = null;
+          if (entry.payloadUrl) {
+            payloadData = await this.fetchPayloadBuffer(entry.payloadUrl, context);
+          }
+
+          if (typeof entry.run === 'function') {
+            const result = await entry.run({
+              api: this,
+              isPs4: isPs4Device,
+              platform: detectedPlatformLabel,
+              payloadData,
+              context
+            });
+            return { ok: true, payload: key, platform: detectedPlatformLabel, result };
+          }
+
+          if (entry.globalFn && typeof window[entry.globalFn] === 'function') {
+            const result = await window[entry.globalFn]({
+              isPs4: isPs4Device,
+              platform: detectedPlatformLabel,
+              payloadData,
+              context
+            });
+            return { ok: true, payload: key, platform: detectedPlatformLabel, result };
+          }
+
+          this.setStatus(
+            `${key.toUpperCase()} hook staged on ${detectedPlatformLabel}`,
+            payloadData
+              ? `Fetched ${payloadData.byteLength} bytes • Ready for execution hook`
+              : 'Hook ready • Attach a handler function to execute custom logic',
+            { stopAnimation: true }
+          );
+          return { ok: true, staged: true, payload: key, platform: detectedPlatformLabel, payloadData };
+        } catch (err) {
+          this.setStatus(
+            `${key.toUpperCase()} auto check notice`,
+            err && err.message ? err.message : 'Host module not present',
+            { stopAnimation: true }
+          );
+          return { ok: false, error: err, payload: key, platform: detectedPlatformLabel };
+        } finally {
+          isBusy = false;
+        }
+      },
+
+      async runSequence(payloadNames = [], context = {}) {
+        const list = Array.isArray(payloadNames) ? payloadNames : [];
+        const results = [];
+        for (const item of list) {
+          const res = await this.runPayload(item, { ...context, inSequence: true });
+          results.push(res);
+          if (!res.ok) {
+            break;
+          }
+        }
+        return results;
+      },
+
+      async autoDetectAndRun() {
+        startStatusAnimation('Checking PS4 Environment', 'Please Wait');
+
+        await new Promise((resolve) => setTimeout(resolve, 650));
+
+        const info = detectPs4Client();
+        isPs4Device = info.isPs4;
+        detectedPlatformLabel = info.platformLabel;
+
+        if (!isPs4Device) {
+          this.setStatus(
+            `PS4 မဟုတ်ပါ • Detected: ${detectedPlatformLabel}`,
+            'Not a PlayStation 4 device — auto routine halted automatically',
+            { stopAnimation: true }
+          );
+          return this.runHook('onNonPs4Detected', info);
+        }
+
+        startStatusAnimation('PS4 Detected • Loading GoldHEN v2.4b18.14', 'Please Wait');
+        return this.runPayload('goldhen', { auto: true, deviceInfo: info });
+      },
+
+      runHook(hookName, payload) {
+        try {
+          if (typeof window[hookName] === 'function') {
+            return window[hookName](payload);
+          }
+        } catch (err) {
+          subStatus.textContent = `Hook "${hookName}" skipped safely.`;
+        }
+        return null;
+      }
+    };
+
+    // Register default PS4-gated entry hook
+    SeagullHostAPI.registerPayload('goldhen', {
+      label: 'GoldHEN',
+      requirePs4: true,
+      globalFn: 'seagullOnGoldHen',
+      run({ api, platform }) {
+        api.setStatus(
+          `PS4 Confirmed (${platform}) • GoldHEN v2.4b18.14 Ready`,
+          'Connect your PS4 GoldHEN handler via window.seagullOnGoldHen or SeagullHostAPI.registerPayload()'
+        );
+      }
+    });
+
+    window.SeagullHostAPI = SeagullHostAPI;
+
+    // =========================================================================
+    // 5. EVENT LISTENERS (HIDDEN CONTROLS, UPLOAD, REPLAY, FULLSCREEN, RESIZE)
+    // =========================================================================
+    function toggleControlsVisibility() {
+      if (topControls) {
+        topControls.classList.toggle('is-visible');
+      }
+    }
+
+    if (topBar) {
+      topBar.addEventListener('dblclick', (event) => {
+        if (event.target.closest('button')) return;
+        toggleControlsVisibility();
+      });
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (
+        event.key &&
+        event.key.toLowerCase() === 'h' &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        !event.altKey
+      ) {
+        const activeTag = document.activeElement && document.activeElement.tagName;
+        if (activeTag === 'INPUT' || activeTag === 'TEXTAREA') return;
+        toggleControlsVisibility();
+      }
+    });
+
+    if (uploadBgBtn && bgFileInput) {
+      uploadBgBtn.addEventListener('click', () => bgFileInput.click());
+
+      bgFileInput.addEventListener('change', (event) => {
+        try {
+          const file = event.target.files && event.target.files[0];
+          if (!file) return;
+
+          const reader = new FileReader();
+          reader.onload = () => {
+            const dataUrl = reader.result;
+            if (typeof dataUrl !== 'string') return;
+            applyImageSource(dataUrl, `Loaded background: ${file.name}`);
+            try {
+              localStorage.setItem(STORAGE_BG_KEY, dataUrl);
+            } catch (storageErr) {
+              subStatus.textContent = `Loaded background: ${file.name} (exceeds storage quota)`;
+            }
+          };
+          reader.onerror = () => {
+            subStatus.textContent = 'Could not read selected image.';
+          };
+          reader.readAsDataURL(file);
+        } catch (err) {
+          subStatus.textContent = 'Error loading image file.';
+        } finally {
+          bgFileInput.value = '';
+        }
+      });
+    }
+
+    if (resetBgBtn) {
+      resetBgBtn.addEventListener('click', resetBackground);
+    }
+
+    if (replayBtn) {
+      replayBtn.addEventListener('click', () => {
+        SeagullHostAPI.autoDetectAndRun();
+      });
+    }
+
+    if (fullscreenBtn) {
+      fullscreenBtn.addEventListener('click', async () => {
+        try {
+          if (!document.fullscreenElement) {
+            await ps4Stage.requestFullscreen();
+          } else {
+            await document.exitFullscreen();
+          }
+        } catch (err) {
+          subStatus.textContent = 'Fullscreen is unavailable in this frame.';
+        }
+      });
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+      if (fullscreenBtn) {
+        fullscreenBtn.textContent = document.fullscreenElement ? 'Exit Full Screen' : 'Full Screen';
+      }
+      syncCanvasSize();
+    });
+
+    window.addEventListener('resize', syncCanvasSize);
+
+    // Re-render once Google Fonts finish loading so canvas text uses exact tech fonts
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => {
+        syncCanvasSize();
+      }).catch(() => {});
+    }
+
+    // =========================================================================
+    // 6. INITIALIZATION
+    // =========================================================================
+    // 6. INITIALIZATION (AUTOMATIC DEVICE CHECK ON LOAD)
+    // =========================================================================
+    window.addEventListener('DOMContentLoaded', () => {
+      if (!restoreSavedBackground()) {
+        loadCanvasFallbackOrLocalBg();
+      }
+      SeagullHostAPI.runHook('onSeagullHostReady', {
+        studio: 'SEAGULL STUDIO',
+        author: 'ThetHtooAung',
+        firmwareRange: '5.05 / 7.00 - 14.02'
+      });
+      SeagullHostAPI.autoDetectAndRun();
+    });
+  </script>
+</body>
+</html>
